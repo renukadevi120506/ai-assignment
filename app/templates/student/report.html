@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluation Report - AI Education Assessment{% endblock %}
+{% block page_title %}Official Assessment Evaluation Report{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm p-4 mb-4">
+    <!-- Header with Student & Assessment summary -->
+    <div class="row align-items-center border-bottom pb-4 mb-4">
+        <div class="col-md-8">
+            <span class="badge bg-success text-uppercase mb-2"><i class="bi bi-shield-check"></i> Teacher Approved Evaluation</span>
+            <h3 class="fw-bold mb-1">{{ submission.assessment.title }}</h3>
+            <p class="text-muted mb-0">
+                Subject: <strong>{{ submission.assessment.subject }}</strong> &bull; Topic: <strong>{{ submission.assessment.topic }}</strong> &bull; Student: <strong>{{ submission.student.full_name }}</strong>
+            </p>
+            <small class="text-muted">Submitted: {{ submission.submitted_at.strftime('%B %d, %Y %H:%M') if submission.submitted_at else 'N/A' }}</small>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <div class="p-3 bg-light rounded border text-center d-inline-block" style="min-width: 180px;">
+                <div class="small text-muted text-uppercase fw-semibold">Final Score</div>
+                <div class="display-6 fw-bold text-success">{{ evaluation.final_score }} <span class="fs-4 text-muted">/ {{ evaluation.max_marks }}</span></div>
+                <span class="badge bg-primary fs-6">{{ evaluation.percentage }}%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question & Original Student Answer -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="p-3 bg-light rounded border h-100">
+                <h6 class="fw-bold text-muted text-uppercase small mb-2"><i class="bi bi-question-circle text-primary me-1"></i> Assessment Question</h6>
+                <p class="fw-semibold text-dark mb-0">{{ submission.question.question_text }}</p>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="p-3 bg-white rounded border h-100">
+                <h6 class="fw-bold text-muted text-uppercase small mb-2"><i class="bi bi-card-text text-secondary me-1"></i> Original Student Answer</h6>
+                <div class="p-2 bg-light rounded small" style="white-space: pre-wrap;">{{ submission.answer_text }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Criterion-Wise Marks & Transparent Explanations -->
+    <h5 class="fw-bold mb-3"><i class="bi bi-list-check text-primary me-2"></i>Criterion-Wise Marks Breakdown</h5>
+    <div class="mb-4">
+        {% for cs in evaluation.criterion_scores %}
+        <div class="card mb-3 p-3 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="fw-bold fs-6 text-dark">{{ cs.criterion_name }}</span>
+                    <span class="badge bg-{{ cs.status|status_badge }} ms-2">{{ cs.status|capitalize }}</span>
+                </div>
+                <div>
+                    <span class="fw-bold fs-5 text-success">{{ cs.approved_marks if cs.approved_marks is not None else cs.suggested_marks }}</span>
+                    <span class="text-muted">/ {{ cs.max_marks }} pts</span>
+                </div>
+            </div>
+
+            <p class="text-secondary small mb-2">{{ cs.explanation }}</p>
+
+            <!-- Evidence Quotes -->
+            {% if cs.supporting_evidence %}
+            <div class="mb-2">
+                <span class="small fw-semibold text-success"><i class="bi bi-quote"></i> Supporting Evidence from Answer:</span>
+                {% for ev in cs.supporting_evidence %}
+                <div class="evidence-quote">{{ ev }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Missing Concepts -->
+            {% if cs.missing_concepts %}
+            <div>
+                <span class="small fw-semibold text-danger"><i class="bi bi-x-circle"></i> Missing Concepts:</span>
+                <div>
+                    {% for mc in cs.missing_concepts %}
+                    <span class="missing-pill">{{ mc }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Teacher Overall Feedback & Notes -->
+    {% if evaluation.teacher_notes or evaluation.overall_feedback %}
+    <div class="p-4 bg-primary-subtle rounded border border-primary mb-4">
+        <h6 class="fw-bold text-primary text-uppercase small mb-2"><i class="bi bi-chat-left-quote-fill me-1"></i> Teacher Feedback & Guidance</h6>
+        <p class="mb-0 text-dark">{{ evaluation.teacher_notes or evaluation.overall_feedback }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Identified Learning Gaps -->
+    {% if evaluation.learning_gaps %}
+    <h5 class="fw-bold mb-3"><i class="bi bi-lightbulb text-warning me-2"></i>Identified Learning Gaps</h5>
+    <div class="row g-3 mb-4">
+        {% for gap in evaluation.learning_gaps %}
+        <div class="col-md-6">
+            <div class="card p-3 border h-100 bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-danger">{{ gap.concept_name }}</strong>
+                    <span class="badge bg-secondary">{{ gap.difficulty_level }}</span>
+                </div>
+                <p class="small text-muted mb-2">{{ gap.description }}</p>
+                {% if gap.recommended_material %}
+                <div class="small text-primary">
+                    <strong>Study Recommendation:</strong> {{ gap.recommended_material }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Practice Button -->
+    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+        <a href="{{ url_for('student.submissions_list') }}" class="btn btn-outline-secondary">Back to Submissions</a>
+        <a href="{{ url_for('student.practice_questions') }}" class="btn btn-primary px-4 fw-semibold">
+            <i class="bi bi-lightning-charge me-1"></i> Go to Personalized Practice Lab
+        </a>
+    </div>
+</div>
+{% endblock %}

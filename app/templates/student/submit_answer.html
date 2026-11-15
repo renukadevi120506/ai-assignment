@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Answer - Student Panel{% endblock %}
+{% block page_title %}Submit Descriptive Answer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm p-4 mb-4">
+            <div class="border-bottom pb-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h4 class="fw-bold mb-0 text-dark">{{ assessment.title }}</h4>
+                    <span class="badge bg-primary fs-6">{{ question.maximum_marks if question else 10 }} Marks</span>
+                </div>
+                <div>
+                    <span class="badge bg-light text-dark border">{{ assessment.subject }}</span>
+                    <span class="badge bg-secondary-subtle text-secondary">{{ assessment.topic }}</span>
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="p-3 bg-light rounded border mb-4">
+                <label class="fw-bold text-muted small text-uppercase d-block mb-1">Assessment Question:</label>
+                <p class="fs-5 fw-semibold text-dark mb-0">{{ question.question_text if question else '' }}</p>
+            </div>
+
+            <div class="alert alert-info py-2 small d-flex align-items-center mb-4">
+                <i class="bi bi-info-circle-fill fs-5 me-2"></i>
+                <div>
+                    <strong>Semantic Grading Active:</strong> Your answer will be evaluated on conceptual understanding, completeness, and reasoning based on the teacher's rubric criteria, rather than exact keyword matching.
+                </div>
+            </div>
+
+            <!-- Student Answer Form -->
+            <form method="POST" action="{{ url_for('student.view_assessment', id=assessment.id) }}">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Your Descriptive Answer</label>
+                    <textarea name="answer_text" class="form-control" rows="10" placeholder="Type your comprehensive explanation and answer here..." required autofocus></textarea>
+                    <small class="text-muted">Take time to elaborate on core concepts, processes, and real-world examples where appropriate.</small>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <a href="{{ url_for('student.assessments') }}" class="btn btn-outline-secondary">Back to Assessments</a>
+                    <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold" onclick="return confirm('Submit this answer for evaluation? You cannot edit it after submission.');">
+                        <i class="bi bi-send-check me-1"></i> Submit Answer for Evaluation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

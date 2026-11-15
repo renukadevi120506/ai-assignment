@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluations History - Teacher Panel{% endblock %}
+{% block page_title %}Evaluations Management{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">Evaluations Overview</h5>
+        <span class="text-muted small">AI-Assisted and Teacher-Approved Evaluations</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Assessment</th>
+                        <th>AI Score</th>
+                        <th>Approved Score</th>
+                        <th>Status</th>
+                        <th>Evaluated Date</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ev in evaluations %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ ev.submission.student.full_name }}</div>
+                            <small class="text-muted">{{ ev.submission.student.email }}</small>
+                        </td>
+                        <td>{{ ev.submission.assessment.title }}</td>
+                        <td>{{ ev.total_suggested_marks }} / {{ ev.max_marks }} ({{ ev.percentage }}%)</td>
+                        <td class="fw-bold">
+                            {% if ev.total_approved_marks is not None %}
+                            <span class="text-success">{{ ev.total_approved_marks }} / {{ ev.max_marks }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ ev.status|status_badge }}">{{ ev.status|capitalize }}</span>
+                        </td>
+                        <td>{{ ev.evaluated_at.strftime('%b %d, %Y') if ev.evaluated_at else 'N/A' }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('evaluation.review', evaluation_id=ev.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> Review / Edit
+                            </a>
+                            {% if ev.status == 'approved' %}
+                            <a href="{{ url_for('student.report_view', submission_id=ev.submission_id) }}" class="btn btn-sm btn-outline-success ms-1">
+                                <i class="bi bi-file-earmark-check"></i> Report
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-clipboard-x display-4 d-block mb-2 text-secondary"></i>
+                            No evaluations generated yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Review Evaluation - Teacher Panel{% endblock %}
+{% block page_title %}Evaluation Review & Approval{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Student Submission & Question Context -->
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm p-4 mb-4">
+            <h6 class="text-uppercase text-muted fw-bold small">Submission Details</h6>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold mb-0 text-dark">{{ evaluation.submission.student.full_name }}</h5>
+                <span class="badge bg-{{ evaluation.status|status_badge }} fs-6">{{ evaluation.status|capitalize }}</span>
+            </div>
+            <div class="text-muted small mb-3">
+                Assessment: <strong>{{ evaluation.submission.assessment.title }}</strong> ({{ evaluation.submission.assessment.subject }})
+            </div>
+
+            <div class="p-3 bg-light rounded border mb-3">
+                <label class="fw-bold small text-muted d-block mb-1">Question:</label>
+                <p class="mb-0 small fw-semibold text-dark">{{ evaluation.submission.question.question_text }}</p>
+                <small class="text-muted d-block mt-1">Maximum Marks: {{ evaluation.max_marks }} pts</small>
+            </div>
+
+            <div class="p-3 bg-white rounded border">
+                <label class="fw-bold small text-muted d-block mb-1">Student Answer:</label>
+                <div class="p-2 bg-light rounded" style="white-space: pre-wrap; font-size: 0.95rem;">{{ evaluation.submission.answer_text }}</div>
+            </div>
+        </div>
+
+        <!-- Identified Learning Gaps Card -->
+        <div class="card shadow-sm p-4 mb-4">
+            <h6 class="text-uppercase text-muted fw-bold small mb-3">Identified Learning Gaps ({{ evaluation.learning_gaps|length }})</h6>
+            {% for gap in evaluation.learning_gaps %}
+            <div class="border rounded p-3 mb-2 bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-danger">{{ gap.concept_name }}</strong>
+                    <span class="badge bg-secondary">{{ gap.difficulty_level }}</span>
+                </div>
+                <p class="small text-muted mb-1">{{ gap.description }}</p>
+                {% if gap.recommended_material %}
+                <small class="text-primary d-block"><strong>Recommended Focus:</strong> {{ gap.recommended_material }}</small>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No conceptual learning gaps detected.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- AI Evaluation Breakdown & Teacher Marks Override -->
+    <div class="col-lg-7">
+        <form method="POST" action="{{ url_for('evaluation.approve', evaluation_id=evaluation.id) }}">
+            <div class="card shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <div>
+                        <h5 class="fw-bold mb-0">Criterion-Level Evaluation</h5>
+                        <small class="text-muted">Review AI-suggested marks and adjust if necessary before approving</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="fs-4 fw-bold text-primary">{{ evaluation.total_suggested_marks }}</span> / {{ evaluation.max_marks }} pts
+                        <div class="small text-muted">AI Score ({{ evaluation.percentage }}%)</div>
+                    </div>
+                </div>
+
+                <!-- Criteria Scores List -->
+                {% for cs in evaluation.criterion_scores %}
+                <div class="card mb-3 p-3 border">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span class="fw-bold text-dark">{{ cs.criterion_name }}</span>
+                            <span class="badge bg-{{ cs.status|status_badge }} ms-2">{{ cs.status|capitalize }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">Max: {{ cs.max_marks }} pts | AI: {{ cs.suggested_marks }} pts</span>
+                            <div class="input-group input-group-sm" style="width: 120px;">
+                                <span class="input-group-text bg-light">Marks</span>
+                                <input type="number" step="0.5" min="0" max="{{ cs.max_marks }}" name="criterion_marks_{{ cs.id }}" class="form-control text-center fw-bold" value="{{ cs.approved_marks if cs.approved_marks is not None else cs.suggested_marks }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="small text-secondary mb-2">{{ cs.explanation }}</p>
+
+                    <!-- Supporting Evidence from Answer -->
+                    {% if cs.supporting_evidence %}
+                    <div class="mb-2">
+                        <span class="small fw-semibold text-success"><i class="bi bi-quote"></i> Evidence from Answer:</span>
+                        {% for ev in cs.supporting_evidence %}
+                        <div class="evidence-quote">{{ ev }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Missing Concepts -->
+                    {% if cs.missing_concepts %}
+                    <div>
+                        <span class="small fw-semibold text-danger"><i class="bi bi-x-circle"></i> Missing Concepts:</span>
+                        <div>
+                            {% for mc in cs.missing_concepts %}
+                            <span class="missing-pill">{{ mc }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <!-- Teacher Feedback Section -->
+                <div class="mt-3">
+                    <label class="form-label fw-semibold">Teacher Feedback & Approval Notes</label>
+                    <textarea name="teacher_notes" class="form-control" rows="3" placeholder="Provide constructive feedback or explanations for mark adjustments for the student...">{{ evaluation.teacher_notes or evaluation.overall_feedback }}</textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <div>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="bi bi-x-circle me-1"></i> Reject Evaluation
+                        </button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('teacher.submissions') }}" class="btn btn-outline-secondary">Back</a>
+                        <button type="submit" class="btn btn-success px-4 fw-semibold">
+                            <i class="bi bi-check-circle me-1"></i> Approve & Publish to Student
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('evaluation.reject', evaluation_id=evaluation.id) }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger">Reject Evaluation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">Rejecting this evaluation marks it for re-evaluation or manual review. The student will not see it until approved.</p>
+                    <label class="form-label fw-semibold">Reason for Rejection</label>
+                    <textarea name="reject_reason" class="form-control" rows="3" required placeholder="State reason for rejecting AI suggestion..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

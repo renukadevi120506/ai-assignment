@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}My Assessments - Student Panel{% endblock %}
+{% block page_title %}Assigned Assessments{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">Active Course Assessments</h5>
+        <span class="text-muted small">Submit descriptive answers to receive AI & teacher evaluated feedback</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Assessment</th>
+                        <th>Subject & Topic</th>
+                        <th>Max Marks</th>
+                        <th>Due Date</th>
+                        <th>Your Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in assessments %}
+                    {% set sub = submissions.get(a.id) %}
+                    <tr>
+                        <td class="fw-bold">{{ a.title }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ a.subject }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary">{{ a.topic }}</span>
+                        </td>
+                        <td class="fw-semibold">{{ a.total_max_marks }} pts</td>
+                        <td>{{ a.due_date.strftime('%b %d, %Y') if a.due_date else 'No deadline' }}</td>
+                        <td>
+                            {% if sub %}
+                                {% if sub.status == 'approved' %}
+                                <span class="badge bg-success">Approved ({{ sub.evaluation.total_approved_marks }}/{{ sub.evaluation.max_marks }})</span>
+                                {% elif sub.status == 'evaluated' %}
+                                <span class="badge bg-info text-dark">Under Review</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Submitted</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Not Submitted</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if sub %}
+                                {% if sub.status == 'approved' %}
+                                <a href="{{ url_for('student.report_view', submission_id=sub.id) }}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-file-earmark-check"></i> View Report
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">Awaiting Approval</span>
+                                {% endif %}
+                            {% else %}
+                            <a href="{{ url_for('student.view_assessment', id=a.id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil"></i> Start Answer
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-card-checklist display-4 d-block mb-2 text-secondary"></i>
+                            No active assessments currently available.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

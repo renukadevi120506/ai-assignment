@@ -1,0 +1,29 @@
+You are an expert curriculum and rubric specialist.
+Analyze the following educational question and suggest a comprehensive marking rubric divided into discrete criteria.
+
+CRITICAL INSTRUCTIONS:
+1. Ensure the sum of maximum_marks for all criteria equals EXACTLY the requested total marks ({total_marks}).
+2. Provide expected concepts, optional keywords, and clear evaluation guidelines for each criterion.
+3. Return STRICT JSON matching the schema below without markdown fences or extra text.
+
+QUESTION:
+{question}
+
+TOTAL MARKS:
+{total_marks}
+
+JSON RESPONSE SCHEMA:
+{{
+  "rubric_title": "Rubric for question",
+  "total_marks": {total_marks},
+  "criteria": [
+    {{
+      "criterion_name": "Criterion name (e.g. Definition, Core Process, Real-World Example)",
+      "maximum_marks": 2.5,
+      "criterion_description": "Detailed description of what is expected",
+      "expected_concepts": "Key concepts that must be covered",
+      "important_keywords": "Keywords or terminology helpful for context",
+      "evaluation_guidelines": "Instructions for grading full vs partial vs no credit"
+    }}
+  ]
+}}

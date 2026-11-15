@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Assessments - Teacher Panel{% endblock %}
+{% block page_title %}Assessment Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="fw-bold mb-0">Created Assessments</h5>
+        <p class="text-muted small mb-0">Create, manage, and configure questions and rubrics</p>
+    </div>
+    <a href="{{ url_for('assessment.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Create Assessment
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Subject & Topic</th>
+                        <th>Max Marks</th>
+                        <th>Rubric Status</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in assessments %}
+                    {% set q = a.questions[0] if a.questions else None %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ a.title }}</div>
+                            <small class="text-muted">Created {{ a.created_at.strftime('%b %d, %Y') if a.created_at else '' }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ a.subject }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary">{{ a.topic }}</span>
+                        </td>
+                        <td class="fw-semibold">{{ a.total_max_marks }} pts</td>
+                        <td>
+                            {% if q and q.rubric and q.rubric.criteria %}
+                            <span class="badge bg-success"><i class="bi bi-check2"></i> {{ q.rubric.criteria|length }} Criteria</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> No Rubric</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ a.due_date.strftime('%b %d, %Y') if a.due_date else 'No deadline' }}</td>
+                        <td>
+                            <span class="badge bg-{{ a.status|status_badge }}">{{ a.status|capitalize }}</span>
+                        </td>
+                        <td class="text-end">
+                            {% if q %}
+                            <a href="{{ url_for('rubric.manage_rubric', question_id=q.id) }}" class="btn btn-sm btn-outline-info me-1" title="Manage Rubric">
+                                <i class="bi bi-list-task"></i> Rubric
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('assessment.edit', id=a.id) }}" class="btn btn-sm btn-outline-secondary me-1" title="Edit Assessment">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('assessment.delete', id=a.id) }}" class="d-inline" onsubmit="return confirm('Delete this assessment and all its submissions?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-journal-plus display-4 d-block mb-2 text-secondary"></i>
+                            No assessments created yet. Click "Create Assessment" to start!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

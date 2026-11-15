@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}My Learning Gaps - Student Panel{% endblock %}
+{% block page_title %}Identified Learning Gaps & Remediation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-3">
+        <h5 class="fw-bold mb-0">Targeted Conceptual Improvement Areas</h5>
+        <p class="text-muted small">Based on semantic evaluation of your descriptive answers, here are specific concepts to strengthen.</p>
+    </div>
+
+    {% for gap in gaps %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card shadow-sm h-100 p-3 border-top border-4 {% if gap.status == 'resolved' %}border-success{% else %}border-warning{% endif %}">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-secondary-subtle text-secondary">{{ gap.difficulty_level }}</span>
+                <span class="badge bg-{{ gap.status|status_badge }}">{{ gap.status|capitalize }}</span>
+            </div>
+            <h5 class="fw-bold text-dark mb-2">{{ gap.concept_name }}</h5>
+            <p class="text-secondary small mb-3">{{ gap.description }}</p>
+
+            {% if gap.recommended_material %}
+            <div class="p-2 bg-light rounded small border mb-3">
+                <strong class="text-primary d-block mb-1"><i class="bi bi-book"></i> Recommended Review:</strong>
+                {{ gap.recommended_material }}
+            </div>
+            {% endif %}
+
+            <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
+                <a href="{{ url_for('student.practice_questions') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-patch-question"></i> Practice
+                </a>
+                {% if gap.status != 'resolved' %}
+                <form method="POST" action="{{ url_for('learning.resolve_gap', gap_id=gap.id) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-check-lg"></i> Mark Resolved
+                    </button>
+                </form>
+                {% else %}
+                <span class="text-success small fw-semibold"><i class="bi bi-check2-circle"></i> Resolved</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="card p-5 text-center text-muted">
+            <i class="bi bi-patch-check display-3 text-success mb-3"></i>
+            <h4 class="fw-bold text-dark">No Active Learning Gaps!</h4>
+            <p class="text-muted">You have demonstrated solid conceptual mastery across all evaluated assessments, or are waiting for new assessments to be graded.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

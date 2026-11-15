@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Configure Rubric - Teacher Panel{% endblock %}
+{% block page_title %}Configure Marking Rubric{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Question Context Sidebar -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm p-4 sticky-top" style="top: 1rem;">
+            <h6 class="text-uppercase text-muted fw-bold small">Assessment & Question</h6>
+            <h5 class="fw-bold text-primary">{{ question.assessment.title }}</h5>
+            <div class="mb-3">
+                <span class="badge bg-light text-dark border">{{ question.assessment.subject }}</span>
+                <span class="badge bg-secondary-subtle text-secondary">{{ question.assessment.topic }}</span>
+            </div>
+            <div class="p-3 bg-light rounded border mb-3">
+                <label class="fw-bold small text-muted d-block mb-1">Question Prompt:</label>
+                <p class="mb-0 small">{{ question.question_text }}</p>
+            </div>
+            <div class="d-flex justify-content-between align-items-center p-2 bg-primary-subtle rounded mb-3">
+                <span class="fw-semibold text-primary">Required Total Marks:</span>
+                <span class="badge bg-primary fs-6" id="questionMaxTarget" data-target="{{ question.maximum_marks }}">{{ question.maximum_marks }} pts</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded border mb-3">
+                <span class="fw-semibold text-dark">Current Criteria Sum:</span>
+                <span class="badge bg-secondary fs-6" id="rubricSumDisplay">0.0</span>
+            </div>
+
+            <hr>
+            <div class="d-grid gap-2">
+                <button type="button" id="btnAiGenerateRubric" class="btn btn-outline-primary" onclick="triggerAiRubricGeneration(`{{ question.question_text|replace('`', '') }}`, {{ question.maximum_marks }}, `{{ url_for('rubric.ai_generate') }}`)">
+                    <span id="aiRubricSpinner" class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                    <i class="bi bi-magic me-1"></i> Auto-Generate with AI
+                </button>
+                <small class="text-muted text-center">Uses Gemini to draft criteria adding up to {{ question.maximum_marks }} marks</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rubric Criteria Builder -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm p-4">
+            <form method="POST" action="{{ url_for('rubric.manage_rubric', question_id=question.id) }}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Rubric Criteria</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRubricRow('', 1.0, '', '', '', '')">
+                        <i class="bi bi-plus-lg"></i> Add Criterion
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Rubric Title</label>
+                    <input type="text" name="title" class="form-control" value="{{ rubric.title if rubric else 'Marking Rubric for ' + question.assessment.title }}" required>
+                </div>
+
+                <!-- Criteria Container -->
+                <div id="criteriaContainer">
+                    {% if rubric and rubric.criteria %}
+                        {% for c in rubric.criteria %}
+                        <div class="card mb-3 p-3 border criterion-row">
+                            <div class="row g-2 align-items-center mb-2">
+                                <div class="col-md-7">
+                                    <label class="form-label small fw-bold">Criterion Name</label>
+                                    <input type="text" name="criterion_name[]" class="form-control" value="{{ c.criterion_name }}" placeholder="e.g. Conceptual Definition" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Max Marks</label>
+                                    <input type="number" step="0.5" min="0.5" name="maximum_marks[]" class="form-control criterion-max-input" value="{{ c.maximum_marks }}" required>
+                                </div>
+                                <div class="col-md-2 text-end pt-4">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.criterion-row').remove(); const evt = new Event('input', {bubbles:true}); document.getElementById('criteriaContainer').dispatchEvent(evt);">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Criterion Description</label>
+                                    <input type="text" name="criterion_description[]" class="form-control form-control-sm" value="{{ c.criterion_description or '' }}" placeholder="Description of expectations">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Expected Concepts</label>
+                                    <input type="text" name="expected_concepts[]" class="form-control form-control-sm" value="{{ c.expected_concepts or '' }}" placeholder="Key ideas required">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Important Keywords (Optional)</label>
+                                    <input type="text" name="important_keywords[]" class="form-control form-control-sm" value="{{ c.important_keywords or '' }}" placeholder="Comma separated terminology">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Evaluation Guidelines</label>
+                                    <input type="text" name="evaluation_guidelines[]" class="form-control form-control-sm" value="{{ c.evaluation_guidelines or '' }}" placeholder="Scoring nuances">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Default starting rows -->
+                        <div class="card mb-3 p-3 border criterion-row">
+                            <div class="row g-2 align-items-center mb-2">
+                                <div class="col-md-7">
+                                    <label class="form-label small fw-bold">Criterion Name</label>
+                                    <input type="text" name="criterion_name[]" class="form-control" value="Definition & Core Concept" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Max Marks</label>
+                                    <input type="number" step="0.5" min="0.5" name="maximum_marks[]" class="form-control criterion-max-input" value="3.0" required>
+                                </div>
+                                <div class="col-md-2 text-end pt-4">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.criterion-row').remove(); const evt = new Event('input', {bubbles:true}); document.getElementById('criteriaContainer').dispatchEvent(evt);">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Criterion Description</label>
+                                    <input type="text" name="criterion_description[]" class="form-control form-control-sm" value="Accuracy and clarity of the core definition" placeholder="Description of expectations">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Expected Concepts</label>
+                                    <input type="text" name="expected_concepts[]" class="form-control form-control-sm" value="Core definitions and theoretical foundation" placeholder="Key ideas required">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Important Keywords (Optional)</label>
+                                    <input type="text" name="important_keywords[]" class="form-control form-control-sm" value="" placeholder="Comma separated terminology">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Evaluation Guidelines</label>
+                                    <input type="text" name="evaluation_guidelines[]" class="form-control form-control-sm" value="Award full marks for clear conceptual grasp" placeholder="Scoring nuances">
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <a href="{{ url_for('rubric.list_rubrics') }}" class="btn btn-outline-secondary">Back to Rubrics</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                        <i class="bi bi-check2-circle me-1"></i> Save Rubric
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

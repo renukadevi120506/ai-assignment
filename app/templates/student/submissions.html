@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}My Submissions - Student Panel{% endblock %}
+{% block page_title %}My Submissions & Reports{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">My Assessment Answers</h5>
+        <span class="text-muted small">Access finalized evaluation reports and marks</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Assessment</th>
+                        <th>Submitted Date</th>
+                        <th>Evaluation Status</th>
+                        <th>Marks Allocated</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ sub.assessment.title }}</td>
+                        <td>{{ sub.submitted_at.strftime('%b %d, %Y %H:%M') if sub.submitted_at else 'N/A' }}</td>
+                        <td>
+                            {% if sub.status == 'approved' %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Approved & Finalized</span>
+                            {% elif sub.status == 'evaluated' %}
+                            <span class="badge bg-info text-dark"><i class="bi bi-clock"></i> Evaluated (Awaiting Teacher Review)</span>
+                            {% elif sub.status == 'evaluating' %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-gear-wide-connected"></i> AI Evaluating</span>
+                            {% elif sub.status == 'rejected' %}
+                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Requires Teacher Regrading</span>
+                            {% else %}
+                            <span class="badge bg-secondary"><i class="bi bi-hourglass-split"></i> Submitted</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold">
+                            {% if sub.evaluation and sub.evaluation.status == 'approved' %}
+                            <span class="text-success fs-6">{{ sub.evaluation.total_approved_marks }} / {{ sub.evaluation.max_marks }}</span>
+                            <small class="text-muted">({{ sub.evaluation.percentage }}%)</small>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if sub.evaluation and sub.evaluation.status == 'approved' %}
+                            <a href="{{ url_for('student.report_view', submission_id=sub.id) }}" class="btn btn-sm btn-success">
+                                <i class="bi bi-file-earmark-check"></i> View Report
+                            </a>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-secondary" disabled>Report Pending</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            No answers submitted yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

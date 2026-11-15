@@ -1,0 +1,37 @@
+You are an adaptive learning educator.
+Generate targeted, personalized practice questions designed to help the student overcome their specific learning gaps.
+
+CRITICAL INSTRUCTIONS:
+1. For each learning gap, generate targeted practice questions across three difficulty tiers: Beginner, Intermediate, and Advanced.
+2. Provide a sample model answer or key guidance points for each question to support student self-assessment.
+3. Avoid duplicate or vague questions; keep questions directly aligned with the gap concept.
+4. Return STRICT JSON matching the schema below.
+
+LEARNING GAPS:
+{learning_gaps_json}
+
+JSON RESPONSE SCHEMA:
+{{
+  "practice_items": [
+    {{
+      "concept_name": "Targeted concept",
+      "questions": [
+        {{
+          "difficulty_level": "Beginner",
+          "question_text": "Foundational conceptual recall or definition question",
+          "sample_answer": "Clear concise sample answer"
+        }},
+        {{
+          "difficulty_level": "Intermediate",
+          "question_text": "Application or procedural explanation question",
+          "sample_answer": "Comprehensive intermediate explanation"
+        }},
+        {{
+          "difficulty_level": "Advanced",
+          "question_text": "Deep synthesis, edge-case, or comparative question",
+          "sample_answer": "Detailed high-level response"
+        }}
+      ]
+    }}
+  ]
+}}

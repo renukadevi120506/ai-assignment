@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Assessment - Teacher Panel{% endblock %}
+{% block page_title %}Edit Assessment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm p-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Edit Assessment</h5>
+            <form method="POST" action="{{ url_for('assessment.edit', id=assessment.id) }}">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Assessment Title</label>
+                    <input type="text" name="title" class="form-control" value="{{ assessment.title }}" required>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Subject</label>
+                        <input type="text" name="subject" class="form-control" value="{{ assessment.subject }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Topic</label>
+                        <input type="text" name="topic" class="form-control" value="{{ assessment.topic }}" required>
+                    </div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Maximum Marks</label>
+                        <input type="number" step="1" min="1" max="100" name="maximum_marks" class="form-control" value="{{ question.maximum_marks if question else 10 }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="active" {% if assessment.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="draft" {% if assessment.status == 'draft' %}selected{% endif %}>Draft</option>
+                            <option value="closed" {% if assessment.status == 'closed' %}selected{% endif %}>Closed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Due Date</label>
+                        <input type="date" name="due_date" class="form-control" value="{{ assessment.due_date.strftime('%Y-%m-%d') if assessment.due_date else '' }}">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Descriptive Question</label>
+                    <textarea name="question_text" class="form-control" rows="5" required>{{ question.question_text if question else '' }}</textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('assessment.list_assessments') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

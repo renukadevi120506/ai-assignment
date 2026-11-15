@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Personalized Practice Lab - Student Panel{% endblock %}
+{% block page_title %}Personalized Practice Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-3">
+        <h5 class="fw-bold mb-0">Adaptive Remediation Questions</h5>
+        <p class="text-muted small">Generated specifically for your learning gaps across Beginner, Intermediate, and Advanced tiers to build deep understanding.</p>
+    </div>
+
+    {% for q in questions %}
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100 p-4 border {% if q.is_completed %}border-success{% endif %}">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary-subtle text-primary fw-semibold">{{ q.learning_gap.concept_name }}</span>
+                <span class="badge {% if q.difficulty_level == 'Beginner' %}bg-info text-dark{% elif q.difficulty_level == 'Intermediate' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                    {{ q.difficulty_level }}
+                </span>
+            </div>
+
+            <h5 class="fw-bold text-dark mt-2 mb-3">{{ q.question_text }}</h5>
+
+            {% if q.is_completed %}
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">Your Practice Answer:</label>
+                <div class="p-2 bg-light rounded border small">{{ q.student_practice_answer }}</div>
+            </div>
+
+            {% if q.sample_answer %}
+            <div class="p-3 bg-success-subtle border border-success rounded">
+                <label class="form-label small fw-bold text-success d-block mb-1"><i class="bi bi-lightbulb-fill"></i> Model Sample Answer / Key Takeaways:</label>
+                <div class="small text-dark">{{ q.sample_answer }}</div>
+            </div>
+            {% endif %}
+
+            <div class="mt-3 text-end">
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Completed</span>
+            </div>
+            {% else %}
+            <!-- Practice Answer Form -->
+            <form method="POST" action="{{ url_for('student.submit_practice', question_id=q.id) }}">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Write Your Practice Response:</label>
+                    <textarea name="student_practice_answer" class="form-control" rows="4" placeholder="Explain your answer to verify your mastery..." required></textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Self-reflection exercise</span>
+                    <button type="submit" class="btn btn-primary btn-sm px-3 fw-semibold">
+                        <i class="bi bi-check2-circle me-1"></i> Submit & Compare with Model Answer
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="card p-5 text-center text-muted">
+            <i class="bi bi-patch-question display-3 text-primary mb-3"></i>
+            <h4 class="fw-bold text-dark">No Practice Questions Yet</h4>
+            <p class="text-muted">Once your descriptive answers are evaluated and learning gaps are diagnosed, targeted remediation questions will appear here automatically.</p>
+            <a href="{{ url_for('student.assessments') }}" class="btn btn-outline-primary mx-auto" style="max-width: 200px;">Go to Assessments</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
