@@ -1,4 +1,4 @@
-# AI Education Assessment & Personalized Learning Evaluator (TP10)
+# AI Education Assessment & Personalized Learning Evaluator 
 
 An AI-powered educational assessment platform that helps teachers evaluate descriptive student answers using teacher-defined marking rubrics and semantic AI evaluation.
 
